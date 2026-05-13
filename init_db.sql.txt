@@ -1,0 +1,63 @@
+-- Очистка старых таблиц
+DROP TABLE IF EXISTS sales CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+
+-- Создание таблиц
+CREATE TABLE categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    category_id INTEGER REFERENCES categories(category_id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0)
+);
+
+CREATE TABLE sales (
+    sale_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+    sale_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    total_amount NUMERIC(10, 2) NOT NULL
+);
+
+-- Заполнение справочников
+INSERT INTO categories (name) VALUES 
+('Электроника'), ('Одежда'), ('Дом и уют'), ('Книги');
+
+INSERT INTO products (category_id, name, price) VALUES
+(1, 'Ноутбук ThinkPad', 450000.00),
+(1, 'Смартфон Galaxy', 320000.00),
+(1, 'Наушники Sony', 85000.00),
+(2, 'Футболка базовая', 5000.00),
+(2, 'Джинсы классические', 18000.00),
+(3, 'Кружка керамическая', 2500.00),
+(3, 'Офисное кресло', 45000.00),
+(4, 'Книга: Изучаем Python', 6000.00),
+(4, 'Книга: Грокаем алгоритмы', 5500.00);
+
+-- Генерация 10 000 транзакций
+DO $$
+DECLARE
+    i INT;
+    random_product_id INT;
+    random_qty INT;
+    product_price NUMERIC;
+BEGIN
+    FOR i IN 1..10000 LOOP
+        random_product_id := floor(random() * 9 + 1)::int;
+        random_qty := floor(random() * 5 + 1)::int;
+        SELECT price INTO product_price FROM products WHERE product_id = random_product_id;
+        
+        INSERT INTO sales (product_id, sale_date, quantity, total_amount)
+        VALUES (
+            random_product_id,
+            timestamp '2023-01-01' + random() * (timestamp '2024-04-01' - timestamp '2023-01-01'),
+            random_qty,
+            random_qty * product_price
+        );
+    END LOOP;
+END $$;

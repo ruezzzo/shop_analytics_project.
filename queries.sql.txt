@@ -1,0 +1,29 @@
+-- 1. Найти товары дороже 50 000
+SELECT * FROM products WHERE price > 50000;
+
+-- 2. Найти самый дорогой товар
+SELECT * FROM products WHERE price = (SELECT MAX(price) FROM products);
+
+-- 3. Продажи за 15 мая 2023 года
+SELECT * FROM sales WHERE sale_date::date = '2023-05-15';
+
+-- 4. Общая выручка магазина
+SELECT SUM(total_amount) AS total_revenue FROM sales;
+
+-- 5. Количество продаж по дням
+SELECT sale_date::date, COUNT(*) FROM sales GROUP BY sale_date::date ORDER BY sale_date::date;
+
+-- 6. День с максимальной выручкой
+SELECT sale_date::date, SUM(total_amount) FROM sales GROUP BY sale_date::date ORDER BY 2 DESC LIMIT 1;
+
+-- 7. Список товаров с названиями их категорий
+SELECT p.name AS product, c.name AS category FROM products p JOIN categories c ON p.category_id = c.category_id;
+
+-- 8. Общая выручка по категориям
+SELECT c.name, SUM(s.total_amount) FROM sales s JOIN products p ON s.product_id = p.product_id JOIN categories c ON p.category_id = c.category_id GROUP BY c.name;
+
+-- 9. Товары, которые ни разу не продавались
+SELECT p.name FROM products p LEFT JOIN sales s ON p.product_id = s.product_id WHERE s.sale_id IS NULL;
+
+-- 10. Топ-3 товара по прибыли
+SELECT p.name, SUM(s.total_amount) AS revenue FROM sales s JOIN products p ON s.product_id = p.product_id GROUP BY p.name ORDER BY revenue DESC LIMIT 3;
